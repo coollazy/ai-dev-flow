@@ -29,13 +29,13 @@ if [ -z "$repo_src" ]; then
   # https://github.com/owner/repo(.git) 或 git@github.com:owner/repo(.git)
   repo_src=$(sed -E 's#^(https://github\.com/|git@github\.com:)##; s#\.git$##' <<<"$url")
 fi
-[[ "$repo_src" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || { echo "共用流程的 repo 格式不對：$repo_src（要是 owner/repo）" >&2; exit 1; }
+[[ "$repo_src" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || { echo "共用流程的 repo 格式不對：${repo_src}（要是 owner/repo）" >&2; exit 1; }
 
 if [ -z "$ref" ]; then
   ref=$(git -C "$here" tag -l 'v*' --sort=-v:refname | head -1)
   [ -n "$ref" ] || ref=HEAD
 fi
-sha=$(git -C "$here" rev-parse --verify -q "${ref}^{commit}") || { echo "找不到版本 $ref（先 git pull --tags 更新這個 repo）" >&2; exit 1; }
+sha=$(git -C "$here" rev-parse --verify -q "${ref}^{commit}") || { echo "找不到版本 ${ref}（先 git pull --tags 更新這個 repo）" >&2; exit 1; }
 tag=$(git -C "$here" tag -l 'v*' --points-at "$sha" --sort=-v:refname | head -1)
 # 呼叫端要拿得到這個 commit：確認已經 push（在遠端的分支上，或遠端有這個版本號）
 if ! git -C "$here" branch -r --contains "$sha" 2>/dev/null | grep -q . &&
