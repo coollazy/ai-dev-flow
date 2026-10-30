@@ -120,6 +120,7 @@ Every input and its default is defined at the top of [`dev.yml`](../.github/work
 | `review_instructions` | empty | Project-specific review points |
 | `max_rounds` | 3 | Maximum automatic fix rounds (needs matching `round-N` labels) |
 | `review_max_turns` / `review_timeout_minutes` | 30 / 20 | Review turn and time limits |
+| `review_runs_on` | `"ubuntu-latest"` | Where the review (with the fixed check) and notifications run (JSON); for a self-hosted runner use `["self-hosted","my-runner"]`, see "Self-hosted runners" |
 | `test_setup` | empty | **Testing runs only when set**, see "Hooking up tests" |
 
 The path filter (docs-only PRs skip the review) is in `on.pull_request_target.paths` of `ai-review.yml`; adjust it as needed.
@@ -165,8 +166,18 @@ updates:
 
 You can also rerun `scripts/install.sh <project-dir> --force` (after `git pull` here), but it overwrites your caller-file settings, which you'll need to restore.
 
+## Self-hosted runners
+
+The dev, review and test jobs can each run on your own machine: set `runs_on` in `ai-dev.yml`, and `review_runs_on` / `test_runs_on` in `ai-review.yml`, to e.g. `["self-hosted","my-runner"]`. The dev start check always runs on GitHub's cloud (it takes seconds and needs no AI login).
+
+- **Only for private repos**: anyone who can trigger a workflow could get code running on your machine. GitHub itself advises against self-hosted runners on public repos
+- **Use a dedicated OS user account** for the runner, with nothing but what the workflow needs. The AI runs commands on that machine; it shouldn't be able to reach your SSH keys, other projects or browser sessions
+- **Required tools**: `git`, `gh`, `jq`, `curl`, `bash`. On Linux, also `bubblewrap` and `socat` (installed automatically only if the runner user has passwordless `sudo`). macOS doesn't need them
+- **The machine must be online**: jobs queue while it's asleep or off, and one runner runs one job at a time
+- `claude-code-action` installs Claude Code itself; the workflow passes the AI provider settings only to that job, so they don't end up in the runner user's `~/.claude/settings.json`
+
 ## Notes
 
 - Free GitHub Actions minutes and Claude usage are shared across your account; watch usage on busy private repos
-- Hosted macOS runners consume minutes several times faster; for Swift / iOS builds or tests, point `runs_on` at your own Mac runner
+- Hosted macOS runners consume minutes several times faster; for Swift / iOS builds or tests, point `runs_on` at your own Mac runner (see "Self-hosted runners")
 - The dev Claude's full output is written to the log only in private repos (public repo logs are visible to everyone, so it's turned off there)

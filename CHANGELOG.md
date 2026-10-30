@@ -29,3 +29,14 @@ Security hardening; callers only need to bump the pinned commit. / 安全性加�
 - 開發 Claude 不再放行 `gh api` 與任意的 `gh pr`／`gh issue` 子指令（例如合併、關閉），只放行查看、建立、編輯、留言、diff、列表、checks；逐行意見改由 workflow 先取出、放進給它的指示
 - Verified for real: the *changes requested* → fix → re-review loop, `@claude` comments on a PR, and the no-new-commit notification (README status updated)
 - 實際驗證過：審查「需修改」→ 修改 → 複審的循環、在 PR 留言 `@claude`、沒推新 commit 時的通知（README 的狀態已更新）
+
+## v0.2.0 — 2026-10-31
+
+The review can run on a self-hosted runner. No change needed for callers that stay on the cloud. / 審查可以跑在自己的電腦（self-hosted runner）；繼續用雲端的呼叫端不用改設定。
+
+- New `review_runs_on` input in `review.yml` (default `"ubuntu-latest"`): where the review and notification jobs run
+- `review.yml` 新增 `review_runs_on` 設定（預設 `"ubuntu-latest"`）：審查與通知跑在哪裡
+- The bubblewrap step runs only on Linux, skips installing when `bwrap` and `socat` are already present, and only touches the AppArmor setting when it's actually restricted, so self-hosted runners without `sudo` work
+- 安裝 bubblewrap 那步只在 Linux 跑，已經裝好就不再安裝，AppArmor 只在真的有限制時才調整：沒有 `sudo` 的 self-hosted runner 也能跑
+- Docs: "Self-hosted runners" section in setup (private repos only, dedicated OS account, required tools)
+- 文件：安裝與設定新增「用自己的電腦跑」（只用在私人 repo、專用系統帳號、要裝的工具）

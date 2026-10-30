@@ -34,6 +34,7 @@ A PR is reviewed only if it (or the issue it closes) has an `ai:*` label.
 ## Risks to know about
 
 - **Issue and comment text is given to the AI**: it can be misled by instructions hidden in that text (prompt injection). Read issues opened by others before starting work on them. The dev Claude is told to act only on review results and comments from people with write access, but that is an instruction, not a hard limit
+- **Self-hosted runners**: the AI runs commands on that machine. Use them only for private repos, under a dedicated OS user account (see [Setup](setup.md#self-hosted-runners))
 - **Testing executes the PR's code**: if you hook up tests, keep production secrets and data out of the test environment
 - **Always read AI-written code before merging**: review and testing are done by AI and don't guarantee the absence of bugs or vulnerabilities
 - **Run logs of public repos are public**: don't put secrets in inputs such as `project_instructions` or `extra_env`

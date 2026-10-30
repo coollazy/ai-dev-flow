@@ -120,6 +120,7 @@ commit 並推到 base 分支，照[怎麼開 issue](writing-issues.zh-TW.md) 開
 | `review_instructions` | 空 | 專案自己的審查重點 |
 | `max_rounds` | 3 | 自動修改最多幾輪（要有對應的 `round-N` 標籤） |
 | `review_max_turns` / `review_timeout_minutes` | 30 / 20 | 審查的步數與時間上限 |
+| `review_runs_on` | `"ubuntu-latest"` | 審查（含固定檢查）與通知跑在哪裡（JSON），自己的電腦寫 `["self-hosted","my-runner"]`，見下面「用自己的電腦跑（self-hosted runner）」 |
 | `test_setup` | 空 | **設了才測試**，見下面「接上測試」 |
 
 路徑過濾（只改文件的 PR 不跑審查）寫在 `ai-review.yml` 的 `on.pull_request_target.paths`，可以依專案調整。
@@ -165,8 +166,18 @@ updates:
 
 也可以在這個 repo `git pull` 之後重跑 `scripts/install.sh <專案目錄> --force`，但它會蓋掉你在呼叫檔裡調整過的設定，之後要再改回來。
 
+## 用自己的電腦跑（self-hosted runner）
+
+開發、審查、測試都可以跑在自己的電腦：`ai-dev.yml` 設 `runs_on`，`ai-review.yml` 設 `review_runs_on`／`test_runs_on`，例如 `["self-hosted","my-runner"]`。開發前的開工檢查固定在 GitHub 雲端跑（只要幾秒，不用登入 AI）。
+
+- **只用在私人 repo**：能觸發流程的人就能讓程式跑在你的電腦上。GitHub 官方也建議公開 repo 不要用自己的 runner
+- **用專用的系統帳號**跑 runner，裡面只放流程需要的東西：AI 會在這台電腦上執行指令，不該碰得到你的 SSH key、其他專案或瀏覽器登入
+- **要裝好的工具**：`git`、`gh`、`jq`、`curl`、`bash`；Linux 另外要 `bubblewrap` 和 `socat`（runner 帳號有免密碼的 `sudo` 才會自動安裝）。macOS 不需要
+- **電腦要開著**：睡眠或關機時工作會排隊；一個 runner 一次只跑一個工作
+- `claude-code-action` 會自己安裝 Claude Code；AI 服務的設定只在那次工作有效，不會寫進 runner 帳號的 `~/.claude/settings.json`
+
 ## 注意
 
 - GitHub Actions 每月免費分鐘數與 Claude 額度都是整個帳號共用；私人 repo 用量大時要留意
-- 在雲端的 macOS 電腦上跑要多花好幾倍分鐘數；Swift／iOS 專案要建置或測試的話，用 `runs_on` 指到自己的 Mac runner
+- 在雲端的 macOS 電腦上跑要多花好幾倍分鐘數；Swift／iOS 專案要建置或測試的話，用 `runs_on` 指到自己的 Mac runner（見上面「用自己的電腦跑」）
 - 開發 Claude 的完整輸出只在私人 repo 寫進 log（公開 repo 誰都看得到 log，自動關掉）

@@ -58,6 +58,8 @@ jobs:
       records_base: develop
       # 專案自己的審查重點（會加在給審查 Claude 的指示後面）
       review_instructions: ""
+      # 審查跑在哪裡，用自己的電腦（self-hosted runner）時改成例如 '["self-hosted","my-runner"]'，見 docs/setup.md
+      # review_runs_on: '"ubuntu-latest"'
       # 測試（選用）：設了 test_setup 才測試，沒設時審查通過就算通過
       # test_setup: .github/ai-test/setup.sh
       # test_prompt_file: .github/ai-test/prompt.md

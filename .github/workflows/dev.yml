@@ -448,13 +448,16 @@ jobs:
       - name: 安裝隔離 Claude 指令用的 bubblewrap
         if: runner.os == 'Linux'
         run: |
-          for i in 1 2 3; do
-            sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends bubblewrap socat && break
-            echo "apt-get 第 $i 次失敗，重試"; sleep 5
-          done
+          # self-hosted runner 已經裝好就不再裝（不一定有 sudo）
+          if ! command -v bwrap > /dev/null || ! command -v socat > /dev/null; then
+            for i in 1 2 3; do
+              sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends bubblewrap socat && break
+              echo "apt-get 第 $i 次失敗，重試"; sleep 5
+            done
+          fi
           command -v bwrap
           # Ubuntu 24.04 起用 AppArmor 限制一般使用者建立 namespace，bubblewrap 需要放寬
-          if [ -f /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+          if [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ]; then
             sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           fi
 

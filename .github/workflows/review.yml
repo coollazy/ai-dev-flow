@@ -65,6 +65,10 @@ on:
       review_timeout_minutes:
         type: number
         default: 20
+      review_runs_on:
+        description: 審查（含固定檢查）與通知跑在哪裡（JSON），例如 "ubuntu-latest" 或 ["self-hosted","my-runner"]。self-hosted runner 的注意事項見 docs/setup.md
+        type: string
+        default: '"ubuntu-latest"'
       max_rounds:
         description: 開發與審查、測試之間最多自動來回幾輪
         type: number
@@ -121,7 +125,7 @@ jobs:
   # 固定檢查（不是 AI）和審查 Claude 放在同一個 job：雲端每個 job 至少算 1 分鐘。
   # 固定檢查擋下、沒指定 AI、[skip ci] 時，後面審查的步驟全部略過，job 照樣算成功；要不要通知、紅綠燈由 verdict 看 outputs 決定
   review:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.review_runs_on) }}
     timeout-minutes: ${{ inputs.review_timeout_minutes }}
     outputs:
       # 固定檢查有跑完（verdict 用來分辨「固定檢查沒跑完」與「審查沒跑完」）
@@ -393,14 +397,17 @@ jobs:
 
       # CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 在 Linux 上要靠 bubblewrap 隔離 Claude 執行的指令，沒裝會直接報錯停下（做法同 dev.yml）
       - name: 安裝隔離 Claude 指令用的 bubblewrap
-        if: steps.gate.outputs.go == 'true'
+        if: steps.gate.outputs.go == 'true' && runner.os == 'Linux'
         run: |
-          for i in 1 2 3; do
-            sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends bubblewrap socat && break
-            echo "apt-get 第 $i 次失敗，重試"; sleep 5
-          done
+          # self-hosted runner 已經裝好就不再裝（不一定有 sudo）
+          if ! command -v bwrap > /dev/null || ! command -v socat > /dev/null; then
+            for i in 1 2 3; do
+              sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends bubblewrap socat && break
+              echo "apt-get 第 $i 次失敗，重試"; sleep 5
+            done
+          fi
           command -v bwrap
-          if [ -f /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+          if [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ]; then
             sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           fi
 
@@ -662,12 +669,15 @@ jobs:
       - name: 安裝隔離 Claude 指令用的 bubblewrap
         if: steps.pr.outputs.closed != 'true' && runner.os == 'Linux'
         run: |
-          for i in 1 2 3; do
-            sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends bubblewrap socat && break
-            echo "apt-get 第 $i 次失敗，重試"; sleep 5
-          done
+          # self-hosted runner 已經裝好就不再裝（不一定有 sudo）
+          if ! command -v bwrap > /dev/null || ! command -v socat > /dev/null; then
+            for i in 1 2 3; do
+              sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends bubblewrap socat && break
+              echo "apt-get 第 $i 次失敗，重試"; sleep 5
+            done
+          fi
           command -v bwrap
-          if [ -f /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+          if [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ]; then
             sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           fi
 
@@ -806,7 +816,8 @@ jobs:
   verdict:
     needs: [review, test]
     if: always()
-    runs-on: ubuntu-latest
+    # 跟審查跑在同一個地方：審查用 self-hosted runner 時，通知也不花雲端的分鐘數
+    runs-on: ${{ fromJSON(inputs.review_runs_on) }}
     timeout-minutes: 5
     env:
       PR_NUMBER: ${{ github.event.pull_request.number }}
