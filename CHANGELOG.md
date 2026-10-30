@@ -27,3 +27,5 @@ Security hardening; callers only need to bump the pinned commit. / 安全性加�
 - 共用流程用到的 action（`actions/checkout`、`anthropics/claude-code-action`、`actions/upload-artifact`）都改用 commit 編號鎖定，鎖定 ai-dev-flow 的版本就連 action 一起鎖住
 - The dev Claude can no longer run `gh api` or arbitrary `gh pr`／`gh issue` subcommands (e.g. merge, close); only view / create / edit / comment / diff / list / checks. Inline review comments are fetched by the workflow and included in its instructions instead
 - 開發 Claude 不再放行 `gh api` 與任意的 `gh pr`／`gh issue` 子指令（例如合併、關閉），只放行查看、建立、編輯、留言、diff、列表、checks；逐行意見改由 workflow 先取出、放進給它的指示
+- Verified for real: the *changes requested* → fix → re-review loop, `@claude` comments on a PR, and the no-new-commit notification (README status updated)
+- 實際驗證過：審查「需修改」→ 修改 → 複審的循環、在 PR 留言 `@claude`、沒推新 commit 時的通知（README 的狀態已更新）

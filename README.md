@@ -49,9 +49,9 @@ Then: install the Claude GitHub App on the project repo, store `CLAUDE_CODE_OAUT
 
 ## Status
 
-Verified end to end in a test project: starting from an issue, the start check rejecting an issue without acceptance criteria, duplicate-start protection, opening the PR, review passing, Telegram notifications.
+Verified end to end in a test project: starting from an issue, the start check rejecting an issue without acceptance criteria, duplicate-start protection, opening the PR, review passing, *changes requested* waking the dev Claude and the re-review passing (round label updated), `@claude` comments on a PR, the notification when the dev Claude replies without a new commit, and Telegram notifications.
 
-Not yet exercised for real: third-party AI providers, waking the dev Claude after *changes requested*, `@claude` comments, and the optional test stage. Issues are welcome.
+Not yet exercised for real: third-party AI providers and the optional test stage. Issues are welcome.
 
 ## License
 
