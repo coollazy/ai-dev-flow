@@ -25,5 +25,5 @@ Security hardening; callers only need to bump the pinned commit. / 安全性加�
 
 - Every action used by the shared workflows (`actions/checkout`, `anthropics/claude-code-action`, `actions/upload-artifact`) is pinned by commit SHA, so pinning ai-dev-flow pins everything
 - 共用流程用到的 action（`actions/checkout`、`anthropics/claude-code-action`、`actions/upload-artifact`）都改用 commit 編號鎖定，鎖定 ai-dev-flow 的版本就連 action 一起鎖住
-- The dev Claude can no longer run `gh api` or arbitrary `gh pr`／`gh issue` subcommands (e.g. merge, close); only view / create / edit / comment / diff / list / checks. Inline review comments are saved to a file for it to read instead
-- 開發 Claude 不再放行 `gh api` 與任意的 `gh pr`／`gh issue` 子指令（例如合併、關閉），只放行查看、建立、編輯、留言、diff、列表、checks；逐行意見改由 workflow 先存成檔案給它讀
+- The dev Claude can no longer run `gh api` or arbitrary `gh pr`／`gh issue` subcommands (e.g. merge, close); only view / create / edit / comment / diff / list / checks. Inline review comments are fetched by the workflow and included in its instructions instead
+- 開發 Claude 不再放行 `gh api` 與任意的 `gh pr`／`gh issue` 子指令（例如合併、關閉），只放行查看、建立、編輯、留言、diff、列表、checks；逐行意見改由 workflow 先取出、放進給它的指示
