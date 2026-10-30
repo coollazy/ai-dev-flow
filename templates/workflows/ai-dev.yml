@@ -1,0 +1,57 @@
+name: AI 開發
+
+# 開發 Claude：呼叫 __AI_DEV_FLOW_REPO__ 的共用流程（dev.yml）。三種叫醒方式：
+# 1. 已規劃好的 issue（有 bug 或 feature 標籤、內文有「## 驗收條件」）加上 ai:subscription 標籤（或自己設定的其他 ai:<服務>） → 改程式、開 PR
+# 2. 有寫入權限的人在 issue 或 PR 留言 @claude
+# 3. 審查與測試判定要修改時，由 ai-review.yml 用 workflow_dispatch 叫醒（帶 PR 編號與第幾輪）
+# 設定說明見 __AI_DEV_FLOW_REPO__ 的 README.md
+
+# run 名稱：issue 開工、issue 上的留言是 issue 編號；PR 上的留言、審查叫醒的修改是 PR 編號
+run-name: AI 開發 #${{ github.event.issue.number || github.event.pull_request.number || inputs.pr_number }}
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 要修改的 PR 編號
+        required: true
+        type: string
+      round:
+        description: 第幾輪修改
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+  actions: read
+
+# 不在這裡設 concurrency：共用流程在 job 上自己排隊（設在這裡的話，跟開工無關的標籤事件也會占排隊位置，可能擠掉真正的開工）
+
+jobs:
+  ai:
+    # 用 commit 編號鎖定共用流程的版本；升級時改成新的 commit，先在一個專案試過再套到其他專案
+    uses: __AI_DEV_FLOW_REPO__/.github/workflows/dev.yml@__AI_DEV_FLOW_REF__
+    secrets: inherit
+    with:
+      pr_number: ${{ inputs.pr_number }}
+      round: ${{ inputs.round }}
+      # ↓ 依專案調整（全部選項與預設值見共用流程 dev.yml 開頭的 inputs）
+      base_branch: develop
+      # 可用的 AI 服務（標籤 ai:<名稱>）；要接其他相容 Anthropic API 的服務見 docs/providers.md，ai-review.yml 要設一樣的值
+      providers: subscription
+      # Claude 啟動前先裝好套件（Claude 的指令有隔離，自己裝會失敗）
+      setup_command: ""
+      # 放行給開發 Claude 的建置、測試指令，例如 Bash(npm run build),Bash(npm test)
+      allowed_tools: ""
+      # 專案的建置與驗證方式、變更記錄寫法（會加在給開發 Claude 的指示後面）
+      project_instructions: |
+        改完照 AGENTS.md 的規則建置、驗證，並寫變更記錄。

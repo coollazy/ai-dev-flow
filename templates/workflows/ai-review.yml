@@ -1,0 +1,66 @@
+name: AI 審查與測試
+
+# PR 開啟或有新 commit 時：固定檢查 → 審查 Claude（只讀程式碼）→（選用）測試 Claude → 通知或叫醒開發修改。
+# 呼叫 __AI_DEV_FLOW_REPO__ 的共用流程（review.yml），設定說明見它的 README.md
+#
+# 用 pull_request_target：workflow 一律用 base 分支的版本，PR 改不到；PR 的程式另外放在 pr-head/
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    # 路徑過濾：PR 改到的檔案全部是文件時不跑（順序有意義：後面的規則蓋過前面的，! 開頭是排除）。
+    # 固定檢查要擋的檔案（規則檔、.github/、Dockerfile、compose 檔）就算是 .md 也照跑，讓固定檢查照常擋下、通知使用者
+    paths:
+      - '**'
+      - '.*'
+      - '.*/**'
+      - '!**/*.md'
+      - '!docs/**'
+      - 'AGENTS.md'
+      - '**/AGENTS.md'
+      - 'CLAUDE.md'
+      - '**/CLAUDE.md'
+      - '.claude/**'
+      - '**/.claude/**'
+      - '.github/**'
+      - '**/Dockerfile*'
+      - '**/*.dockerfile'
+      - '**/docker-compose*.yml'
+      - '**/docker-compose*.yaml'
+      - '**/compose*.yml'
+      - '**/compose*.yaml'
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+  actions: write
+
+concurrency:
+  group: review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  ai:
+    # 用 commit 編號鎖定共用流程的版本（跟 ai-dev.yml 用同一個）
+    uses: __AI_DEV_FLOW_REPO__/.github/workflows/review.yml@__AI_DEV_FLOW_REF__
+    secrets: inherit
+    with:
+      # ↓ 依專案調整（全部選項與預設值見共用流程 review.yml 開頭的 inputs）
+      dev_workflow: ai-dev.yml
+      # 可用的 AI 服務，跟 ai-dev.yml 的 providers 一樣
+      providers: subscription
+      # 另外要擋的檔案，例如 Node 專案的套件清單：^package\.json$|^package-lock\.json$
+      blocked_extra: ""
+      # PR 不能改的紀錄檔（空白分隔），例如 CHANGELOG.md TODO.md；空的就不檢查
+      records_files: ""
+      records_base: develop
+      # 專案自己的審查重點（會加在給審查 Claude 的指示後面）
+      review_instructions: ""
+      # 測試（選用）：設了 test_setup 才測試，沒設時審查通過就算通過
+      # test_setup: .github/ai-test/setup.sh
+      # test_prompt_file: .github/ai-test/prompt.md
+      # test_allowed_tools: Bash(.github/ai-test/http.sh:*)
+      # smoke_script: .github/ai-test/smoke.sh
+      # ci_workflow: ci.yml
