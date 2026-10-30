@@ -61,12 +61,12 @@ scripts/install.sh <project-dir>
 ```
 
 It writes:
-- `.github/workflows/ai-dev.yml`, `ai-review.yml`: the two caller files, pinned to this repo's current commit
+- `.github/workflows/ai-dev.yml`, `ai-review.yml`: the two caller files, pinned to the latest release by commit SHA (e.g. `@97f7655… # v0.1.0`)
 - `.github/ISSUE_TEMPLATE/ai-feature.md`, `ai-bug.md`, `idea.md`: issue templates
 
 and creates these labels on `<REPO>`: `bug`, `feature`, `ai:subscription`, `model:claude-opus-5-5`, `model:claude-sonnet-5-5`, `blocked`, `round-1` to `round-3`.
 
-Options: `--force` overwrites existing files (skipped by default), `--no-labels` skips labels, `--ref <commit>` pins a specific version, `--repo <owner/repo>` sets which repo to reference. The script never commits or pushes.
+Options: `--force` overwrites existing files (skipped by default), `--no-labels` skips labels, `--ref <version or commit>` pins a specific version (e.g. `--ref v0.1.0`), `--repo <owner/repo>` sets which repo to reference. The script never commits or pushes.
 
 ### 6. Adjust the caller files
 
@@ -143,11 +143,27 @@ Commands run by the test Claude are sandboxed and can't reach docker. To read co
 
 ## Upgrading
 
-1. Read this repo's [CHANGELOG](../CHANGELOG.md) and the diff between the two versions
-2. In one project, replace `@<commit>` in both caller files with the new commit (both must match) and try a small issue
+Versions are published as [Releases](https://github.com/coollazy/ai-dev-flow/releases) (`v0.1.0`, …); see the [CHANGELOG](../CHANGELOG.md) for what changed. 0.x versions may include breaking changes.
+
+1. Read the release notes and the diff between your version and the new one
+2. In one project, replace `@<commit> # <version>` in both caller files with the new version's commit and tag (both files must match), then try a small issue
 3. Then update the other projects
 
-You can also rerun `scripts/install.sh <project-dir> --force`, but it overwrites your caller-file settings, which you'll need to restore.
+Caller files pin the commit SHA rather than the tag, because a tag can be moved later and a SHA can't.
+
+To get upgrade PRs automatically, enable Dependabot for GitHub Actions in your project; it recognizes the `@<commit> # <version>` form:
+
+```yaml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+```
+
+You can also rerun `scripts/install.sh <project-dir> --force` (after `git pull` here), but it overwrites your caller-file settings, which you'll need to restore.
 
 ## Notes
 

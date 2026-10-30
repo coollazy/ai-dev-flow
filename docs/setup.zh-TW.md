@@ -61,12 +61,12 @@ scripts/install.sh <專案目錄>
 ```
 
 會寫入：
-- `.github/workflows/ai-dev.yml`、`ai-review.yml`：呼叫共用流程的兩個檔案，鎖定這個 repo 目前的 commit
+- `.github/workflows/ai-dev.yml`、`ai-review.yml`：呼叫共用流程的兩個檔案，用 commit 編號鎖定最新的版本（例如 `@97f7655… # v0.1.0`）
 - `.github/ISSUE_TEMPLATE/ai-feature.md`、`ai-bug.md`、`idea.md`：issue 範本
 
 並在 `<REPO>` 建好標籤：`bug`、`feature`、`ai:subscription`、`model:claude-opus-5-5`、`model:claude-sonnet-5-5`、`blocked`、`round-1`～`round-3`。
 
-選項：`--force` 覆蓋已經有的檔案（預設略過）、`--no-labels` 不建標籤、`--ref <commit>` 指定版本、`--repo <owner/repo>` 指定引用哪個 repo。腳本不會 commit、不會 push。
+選項：`--force` 覆蓋已經有的檔案（預設略過）、`--no-labels` 不建標籤、`--ref <版本號或 commit>` 指定版本（例如 `--ref v0.1.0`）、`--repo <owner/repo>` 指定引用哪個 repo。腳本不會 commit、不會 push。
 
 ### 6. 依專案調整呼叫檔
 
@@ -143,11 +143,27 @@ commit 並推到 base 分支，照[怎麼開 issue](writing-issues.zh-TW.md) 開
 
 ## 升級共用流程
 
-1. 看這個 repo 的 [CHANGELOG](../CHANGELOG.md) 與兩個版本之間的改動
-2. 挑一個專案，把兩個呼叫檔的 `@<commit>` 換成新的 commit（兩個要一樣），開一張小 issue 確認
+每個版本發在 [Releases](https://github.com/coollazy/ai-dev-flow/releases)（`v0.1.0`…），改了什麼見 [CHANGELOG](../CHANGELOG.md)。0.x 的版本之間可能有不相容的改動。
+
+1. 看新版本的說明，以及你目前的版本與新版本之間的改動
+2. 挑一個專案，把兩個呼叫檔的 `@<commit> # <版本號>` 換成新版本的 commit 與版本號（兩個檔案要一樣），開一張小 issue 確認
 3. 沒問題再換其他專案
 
-也可以重跑 `scripts/install.sh <專案目錄> --force`，但它會蓋掉你在呼叫檔裡調整過的設定，之後要再改回來。
+呼叫檔鎖 commit 編號、不直接寫版本號：版本號事後可以被移到別的 commit，commit 編號不會變。
+
+想自動收到升級的 PR，可以在專案開啟 GitHub Actions 的 Dependabot，它認得 `@<commit> # <版本號>` 的寫法：
+
+```yaml
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+```
+
+也可以在這個 repo `git pull` 之後重跑 `scripts/install.sh <專案目錄> --force`，但它會蓋掉你在呼叫檔裡調整過的設定，之後要再改回來。
 
 ## 注意
 

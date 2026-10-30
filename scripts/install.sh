@@ -2,7 +2,8 @@
 # 把 AI 協作流程裝進一個專案：複製呼叫端的 workflow 與 issue 範本、鎖定共用流程的版本、建好標籤。
 # 用法：scripts/install.sh <專案目錄> [--repo <owner/repo>] [--ref <commit>] [--force] [--no-labels]
 #   --repo       呼叫端要引用的共用流程 repo，預設是這個 repo 的 origin（fork 的話就是你的 fork）
-#   --ref        呼叫端鎖定的共用流程版本，預設是這個 repo 目前的 HEAD（要先 push 到 GitHub）
+#   --ref        呼叫端鎖定的共用流程版本：版本號（例如 v0.1.0）或 commit。預設是最新的版本號（還沒有版本號時用 HEAD）
+#                呼叫檔一律寫成 commit 編號，有版本號時在後面加註解（例如 @<commit> # v0.1.0）
 #   --force      專案裡已經有同名檔案時覆蓋（預設不覆蓋，只列出來）
 #   --no-labels  不建標籤
 # 只複製檔案、建標籤，不 commit、不 push；secrets 要使用者自己存（見 README.md「安裝到一個專案」）
@@ -20,7 +21,7 @@ while [ $# -gt 0 ]; do
     *) target=$1; shift ;;
   esac
 done
-[ -n "$target" ] || { sed -n 2,8p "$0" >&2; exit 2; }
+[ -n "$target" ] || { sed -n 2,9p "$0" >&2; exit 2; }
 [ -d "$target/.git" ] || { echo "$target 不是 git repo" >&2; exit 1; }
 
 if [ -z "$repo_src" ]; then
@@ -31,13 +32,19 @@ fi
 [[ "$repo_src" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || { echo "共用流程的 repo 格式不對：$repo_src（要是 owner/repo）" >&2; exit 1; }
 
 if [ -z "$ref" ]; then
-  ref=$(git -C "$here" rev-parse HEAD)
-  # 呼叫端要拿得到這個 commit：確認已經 push
-  if ! git -C "$here" branch -r --contains "$ref" 2>/dev/null | grep -q .; then
-    echo "共用流程目前的 commit ${ref:0:7} 還沒 push 到 GitHub，先 push 再裝（或用 --ref 指定已 push 的 commit）" >&2
-    exit 1
-  fi
+  ref=$(git -C "$here" tag -l 'v*' --sort=-v:refname | head -1)
+  [ -n "$ref" ] || ref=HEAD
 fi
+sha=$(git -C "$here" rev-parse --verify -q "${ref}^{commit}") || { echo "找不到版本 $ref（先 git pull --tags 更新這個 repo）" >&2; exit 1; }
+tag=$(git -C "$here" tag -l 'v*' --points-at "$sha" --sort=-v:refname | head -1)
+# 呼叫端要拿得到這個 commit：確認已經 push（在遠端的分支上，或遠端有這個版本號）
+if ! git -C "$here" branch -r --contains "$sha" 2>/dev/null | grep -q . &&
+   ! { [ -n "$tag" ] && git -C "$here" ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null 2>&1; }; then
+  echo "共用流程的 commit ${sha:0:7} 還沒 push 到 GitHub，先 push 再裝（或用 --ref 指定已 push 的版本）" >&2
+  exit 1
+fi
+# 呼叫檔寫 commit 編號（版本號事後可以被移動，commit 不會）；有版本號時加註解，看得出是哪一版，Dependabot 也認得
+pin=$sha${tag:+ # $tag}
 
 copy() {
   src=$1 dst=$target/$2
@@ -45,7 +52,7 @@ copy() {
     echo "略過（已存在，加 --force 覆蓋）：$2"; return
   fi
   mkdir -p "$(dirname "$dst")"
-  sed -e "s/__AI_DEV_FLOW_REF__/$ref/g" -e "s#__AI_DEV_FLOW_REPO__#$repo_src#g" "$src" > "$dst"
+  sed -e "s/__AI_DEV_FLOW_REF__/$pin/g" -e "s#__AI_DEV_FLOW_REPO__#$repo_src#g" "$src" > "$dst"
   echo "寫入：$2"
 }
 copy "$here/templates/workflows/ai-dev.yml" .github/workflows/ai-dev.yml
@@ -53,7 +60,7 @@ copy "$here/templates/workflows/ai-review.yml" .github/workflows/ai-review.yml
 for f in ai-bug.md ai-feature.md idea.md; do
   copy "$here/templates/ISSUE_TEMPLATE/$f" ".github/ISSUE_TEMPLATE/$f"
 done
-echo "共用流程：$repo_src@$ref"
+echo "共用流程：$repo_src@$sha${tag:+（$tag）}"
 echo "規則段落範本：$here/templates/AGENTS-ai-flow.md（依專案改寫後貼進 AGENTS.md）"
 
 if [ "$labels" = true ]; then
