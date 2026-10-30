@@ -17,7 +17,7 @@ PR 還要有 `ai:*` 標籤（或它要關閉的 issue 有）才會審查。
 
 ## AI 拿得到什麼
 
-- **開發 Claude**：用 Claude GitHub App 的身分推 commit、開 PR、留言；可以讀寫 repo 的程式。不會合併 PR，也不會推到 base 分支以外的地方（照規則開自己的分支）
+- **開發 Claude**：用 Claude GitHub App 的身分推 commit、開 PR、留言；可以讀寫 repo 的程式。`gh` 只放行查看、建立、編輯 issue 與 PR、留言，不能用 `gh api`，也不能合併或關閉。照規則只推自己開的分支；但 `git` 本身沒有限制，請替 base 分支設定**分支保護**（branch protection／rulesets），不讓任何人直接推上去
 - **審查 Claude**：只能讀程式碼、看 `git diff`／`git log`、讀 issue 與 PR、留逐行意見。總評由流程貼，不是 AI 自己貼
 - **測試 Claude**：只能用專案給的測試工具
 - **金鑰**：Claude 執行的指令（Bash）讀不到 AI 的 key 和 GitHub 換通行證用的 token（`CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`，Linux 上用 bubblewrap 隔離）。金鑰存在各專案的 secrets，這個 repo 不放任何金鑰
@@ -37,7 +37,7 @@ PR 還要有 `ai:*` 標籤（或它要關閉的 issue 有）才會審查。
 - **測試會執行 PR 的程式**：接上測試時，測試環境不要放正式的機密或資料
 - **AI 改的程式一定要看過再合併**：審查和測試都是 AI 做的，不保證沒有錯誤或漏洞
 - **公開 repo 的 run log 誰都看得到**：不要在 `project_instructions`、`extra_env` 這類設定裡放機密
-- **鎖定版本**：呼叫檔用 commit 編號引用共用流程。要用別人的共用流程時，先看過內容再鎖定那個 commit，升級前也要看改動（或 fork 一份自己維護）
+- **鎖定版本**：呼叫檔用 commit 編號引用共用流程，共用流程用到的 action（`actions/checkout`、`claude-code-action`…）也都用 commit 編號鎖定，鎖一個 commit 就全部鎖住。要用別人的共用流程時，先看過內容再鎖定那個 commit，升級前也要看改動（或 fork 一份自己維護）
 
 ## 回報安全問題
 

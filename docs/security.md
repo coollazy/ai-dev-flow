@@ -17,7 +17,7 @@ A PR is reviewed only if it (or the issue it closes) has an `ai:*` label.
 
 ## What the AI can access
 
-- **Dev Claude**: pushes commits, opens PRs and comments as the Claude GitHub App; can read and write the repo's code. It never merges PRs and, per the rules, works on its own branches
+- **Dev Claude**: pushes commits, opens PRs and comments as the Claude GitHub App; can read and write the repo's code. Its `gh` access is limited to viewing, creating, editing and commenting on issues and PRs — no `gh api`, no merging or closing. Per the rules it works on its own branches; `git` itself isn't restricted, so **protect your base branch** (branch protection / rulesets) so nothing can be pushed to it directly
 - **Review Claude**: can only read code, run `git diff` / `git log`, read issues and PRs, and leave line comments. The summary is posted by the workflow, not by the AI
 - **Test Claude**: can only use the test tools the project provides
 - **Secrets**: commands Claude runs (Bash) can't read the AI key or the token used to obtain GitHub credentials (`CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`, sandboxed with bubblewrap on Linux). Secrets live in each project; this repo holds none
@@ -37,7 +37,7 @@ A PR is reviewed only if it (or the issue it closes) has an `ai:*` label.
 - **Testing executes the PR's code**: if you hook up tests, keep production secrets and data out of the test environment
 - **Always read AI-written code before merging**: review and testing are done by AI and don't guarantee the absence of bugs or vulnerabilities
 - **Run logs of public repos are public**: don't put secrets in inputs such as `project_instructions` or `extra_env`
-- **Pin versions**: caller files reference the shared workflow by commit SHA. When using someone else's copy, read it before pinning a commit, and review the changes before upgrading (or fork and maintain your own)
+- **Pin versions**: caller files reference the shared workflow by commit SHA, and the shared workflow pins every action it uses (`actions/checkout`, `claude-code-action`, …) by commit SHA too, so pinning one commit pins everything. When using someone else's copy, read it before pinning a commit, and review the changes before upgrading (or fork and maintain your own)
 
 ## Reporting a vulnerability
 
