@@ -60,7 +60,7 @@ copy "$here/templates/workflows/ai-review.yml" .github/workflows/ai-review.yml
 for f in ai-bug.md ai-feature.md idea.md; do
   copy "$here/templates/ISSUE_TEMPLATE/$f" ".github/ISSUE_TEMPLATE/$f"
 done
-echo "共用流程：$repo_src@$sha${tag:+（$tag）}"
+echo "共用流程：${repo_src}@${sha}${tag:+（${tag}）}"
 echo "規則段落範本：$here/templates/AGENTS-ai-flow.md（依專案改寫後貼進 AGENTS.md）"
 
 if [ "$labels" = true ]; then
