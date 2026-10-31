@@ -47,12 +47,6 @@ scripts/install.sh ~/path/to/your-project   # 寫入呼叫檔與 issue 範本、
 - **AI 會推程式到你的 repo**：開發 Claude 有寫入權限（只推到自己開的分支、開 PR，不會合併）。合併一律由你決定。使用前請看過[安全性](docs/security.zh-TW.md)
 - **鎖定版本使用**：呼叫檔用 commit 編號引用這個 repo，這裡更新不會自動影響你的專案；要升級時看過改動再換版本號
 
-## 狀態
-
-已在測試專案實際跑過：issue 開工、沒有驗收條件時開工檢查擋下、重複開工防護、開 PR、審查通過、審查「需修改」後自動叫醒開發並複審通過（輪數標籤照常更新）、在 PR 留言 `@claude`、開發 Claude 沒推新 commit 時的通知、Telegram 通知。
-
-還沒實際跑過：第三方 AI 服務、選用的測試。遇到問題歡迎開 issue。
-
 ## 授權
 
 [MIT](LICENSE)
