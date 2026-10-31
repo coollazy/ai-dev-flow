@@ -40,3 +40,5 @@ The review can run on a self-hosted runner. No change needed for callers that st
 - 安裝 bubblewrap 那步只在 Linux 跑，已經裝好就不再安裝，AppArmor 只在真的有限制時才調整：沒有 `sudo` 的 self-hosted runner 也能跑
 - Docs: "Self-hosted runners" section in setup (private repos only, dedicated OS account, required tools)
 - 文件：安裝與設定新增「用自己的電腦跑」（只用在私人 repo、專用系統帳號、要裝的工具）
+- README: removed the "Status" section; it listed only some verified items, which read as if everything else was untested
+- README：拿掉「狀態」段落；只列部分測過的項目，容易被讀成其他都沒測過
